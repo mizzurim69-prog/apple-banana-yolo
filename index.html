@@ -1,0 +1,860 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fruit Lens | Apple & Banana Detector</title>
+
+  <style>
+    :root {
+      --ink: #24352d;
+      --muted: #6c786f;
+      --green: #2f6b49;
+      --green-dark: #214b35;
+      --green-soft: #eaf3ec;
+      --line: #e1e8e2;
+      --page: #f6f7f3;
+      --apple: #2c9b61;
+      --banana: #3568d4;
+      --shadow: 0 12px 32px rgba(32, 53, 39, .06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topbar-inner {
+      max-width: 1100px;
+      margin: auto;
+      padding: 15px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-weight: 750;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      background: var(--green-soft);
+      border-radius: 12px;
+      font-size: 21px;
+    }
+
+    .brand small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-pill {
+      padding: 7px 12px;
+      background: #f5f8f5;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-right: 6px;
+      border-radius: 50%;
+      background: #37a66b;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 38px auto 48px;
+      padding: 0 24px;
+    }
+
+    .intro { margin-bottom: 26px; }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.3px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 38px);
+      line-height: 1.2;
+      letter-spacing: -1px;
+    }
+
+    .intro-description {
+      max-width: 650px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: 23px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .panel-heading h2,
+    .results-heading h2 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -.2px;
+    }
+
+    .panel-heading p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .step-number {
+      width: 31px;
+      height: 31px;
+      flex: 0 0 31px;
+      display: grid;
+      place-items: center;
+      background: var(--green-soft);
+      color: var(--green);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .upload-box {
+      display: block;
+      padding: 18px;
+      background: #fafcf9;
+      border: 1.5px dashed #b8c9bc;
+      border-radius: 13px;
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+    }
+
+    .upload-box:hover {
+      background: #f2f8f2;
+      border-color: var(--green);
+    }
+
+    .upload-inner {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .upload-icon {
+      width: 43px;
+      height: 43px;
+      flex: 0 0 43px;
+      display: grid;
+      place-items: center;
+      background: var(--green-soft);
+      color: var(--green);
+      border-radius: 12px;
+      font-size: 22px;
+    }
+
+    .upload-copy strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .upload-copy span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    #imageInput {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      overflow: hidden;
+    }
+
+    .file-name {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .preview-wrap {
+      min-height: 220px;
+      margin-top: 17px;
+      padding: 10px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #f7f9f6;
+    }
+
+    #canvas {
+      display: none;
+      width: 100%;
+      height: auto;
+      max-height: 480px;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .empty-state {
+      padding: 25px 10px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 29px;
+    }
+
+    .empty-state strong {
+      display: block;
+      color: #4b5c50;
+      font-size: 13px;
+    }
+
+    .empty-state span:last-child {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+
+    .legend {
+      display: none;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    .apple-swatch { background: var(--apple); }
+    .banana-swatch { background: var(--banana); }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 17px;
+    }
+
+    button {
+      min-height: 45px;
+      border: 0;
+      border-radius: 10px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    #detectButton {
+      flex: 1;
+      padding: 0 16px;
+      background: var(--green);
+      color: white;
+    }
+
+    #detectButton:hover:not(:disabled) {
+      background: var(--green-dark);
+    }
+
+    #detectButton:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    #resetButton {
+      padding: 0 17px;
+      background: #eff3ef;
+      color: #46564a;
+    }
+
+    #resetButton:hover { background: #e4ebe4; }
+
+    #status {
+      display: flex;
+      gap: 9px;
+      margin-top: 15px;
+      padding: 11px 12px;
+      border-radius: 10px;
+      background: #f5f7f4;
+      color: var(--muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    #status::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      flex: 0 0 7px;
+      margin-top: 5px;
+      border-radius: 50%;
+      background: #9ba89d;
+    }
+
+    #status.success {
+      background: #edf7ef;
+      color: #286443;
+    }
+
+    #status.success::before { background: #2f9d60; }
+
+    #status.error {
+      background: #fff1ef;
+      color: #9b4035;
+    }
+
+    #status.error::before { background: #d65d4e; }
+
+    #status.loading {
+      background: #f0f5ff;
+      color: #365c9c;
+    }
+
+    #status.loading::before { background: #477be0; }
+
+    .results-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .count-badge {
+      display: none;
+      padding: 4px 9px;
+      background: var(--green-soft);
+      color: var(--green);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .results-placeholder {
+      padding: 24px 14px;
+      background: #fbfcfa;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    .result {
+      margin-top: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .result-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .fruit-name {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .fruit-icon {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      background: #f3f6f2;
+      border-radius: 10px;
+      font-size: 17px;
+    }
+
+    .confidence {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .meter {
+      height: 5px;
+      margin-top: 12px;
+      overflow: hidden;
+      background: #edf1ed;
+      border-radius: 999px;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: inherit;
+    }
+
+    .tech-note {
+      display: flex;
+      gap: 10px;
+      margin-top: 17px;
+      padding: 13px;
+      background: #f5f7f3;
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tech-note strong { color: var(--ink); }
+
+    footer {
+      padding: 0 24px 28px;
+      text-align: center;
+      color: #849087;
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      main { margin-top: 26px; padding: 0 14px; }
+      .topbar-inner { padding: 13px 16px; }
+      .workspace { grid-template-columns: 1fr; }
+      .panel { padding: 18px; }
+    }
+
+    @media (max-width: 420px) {
+      .status-pill { display: none; }
+      .action-row { flex-direction: column; }
+      #resetButton { min-height: 42px; }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">🍎</div>
+        <div>
+          Fruit Lens
+          <small>Apple & Banana Detection</small>
+        </div>
+      </div>
+      <div class="status-pill">
+        <span class="status-dot"></span> YOLO model · API demo
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="intro">
+      <p class="eyebrow">Computer vision project</p>
+      <h1>See what’s in your fruit.</h1>
+      <p class="intro-description">
+        Upload a photo to identify apples and bananas. Detected fruits
+        appear with a bounding box and confidence score.
+      </p>
+    </section>
+
+    <section class="workspace">
+      <div class="panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Image workspace</h2>
+            <p>Choose a clear photo with apples or bananas.</p>
+          </div>
+          <span class="step-number">01</span>
+        </div>
+
+        <label class="upload-box" for="imageInput">
+          <div class="upload-inner">
+            <div class="upload-icon">↑</div>
+            <div class="upload-copy">
+              <strong>Choose an image</strong>
+              <span>JPG, PNG or WEBP · Select a file from your device</span>
+            </div>
+          </div>
+        </label>
+
+        <input type="file" id="imageInput" accept="image/*">
+        <div class="file-name" id="fileName">No image selected yet</div>
+
+        <div class="preview-wrap">
+          <div class="empty-state" id="emptyState">
+            <span class="empty-icon">▧</span>
+            <strong>Your image will appear here</strong>
+            <span>Bounding boxes will show after detection.</span>
+          </div>
+          <canvas id="canvas" aria-label="Image with detected fruit boxes"></canvas>
+        </div>
+
+        <div class="legend" id="legend">
+          <span><i class="swatch apple-swatch"></i> Apple</span>
+          <span><i class="swatch banana-swatch"></i> Banana</span>
+        </div>
+
+        <div class="action-row">
+          <button id="detectButton" disabled>Detect fruit</button>
+          <button id="resetButton" type="button">Reset</button>
+        </div>
+
+        <div id="status" role="status" aria-live="polite">
+          Choose an image to get started.
+        </div>
+      </div>
+
+      <aside class="panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Detection results</h2>
+            <p>Objects found in your image.</p>
+          </div>
+          <span class="step-number">02</span>
+        </div>
+
+        <div class="results-heading">
+          <h2>Predictions</h2>
+          <span class="count-badge" id="countBadge">0 found</span>
+        </div>
+
+        <div id="results">
+          <div class="results-placeholder">
+            Your predictions will appear here after you run detection.
+          </div>
+        </div>
+
+        <div class="tech-note">
+          <span>ⓘ</span>
+          <div>
+            <strong>How it works</strong><br>
+            Image → FastAPI API → YOLO model → Detection boxes and scores.
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer>Fruit Lens · Student computer vision project · YOLO + FastAPI</footer>
+
+  <script>
+    const API_URL = "http://127.0.0.1:8000/predict";
+
+    const imageInput = document.getElementById("imageInput");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const detectButton = document.getElementById("detectButton");
+    const resetButton = document.getElementById("resetButton");
+    const statusBox = document.getElementById("status");
+    const resultsBox = document.getElementById("results");
+    const legend = document.getElementById("legend");
+    const emptyState = document.getElementById("emptyState");
+    const fileName = document.getElementById("fileName");
+    const countBadge = document.getElementById("countBadge");
+
+    let selectedFile = null;
+    let sourceImage = new Image();
+    let imageURL = null;
+
+    function setStatus(message, type = "") {
+      statusBox.textContent = message;
+      statusBox.className = type;
+    }
+
+    function resetResults() {
+      resultsBox.innerHTML =
+        '<div class="results-placeholder">Your predictions will appear here after you run detection.</div>';
+      countBadge.style.display = "none";
+      legend.style.display = "none";
+    }
+
+    function drawOriginalImage() {
+      if (!sourceImage.complete || !sourceImage.naturalWidth) return;
+
+      canvas.width = sourceImage.naturalWidth;
+      canvas.height = sourceImage.naturalHeight;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(sourceImage, 0, 0);
+
+      canvas.style.display = "block";
+      emptyState.style.display = "none";
+    }
+
+    function drawDetections(detections) {
+      drawOriginalImage();
+
+      const lineWidth = Math.max(3, Math.round(canvas.width / 300));
+      const fontSize = Math.max(16, Math.round(canvas.width / 38));
+
+      ctx.lineWidth = lineWidth;
+      ctx.font = `bold ${fontSize}px Arial`;
+      ctx.textBaseline = "middle";
+
+      detections.forEach((item) => {
+        if (!Array.isArray(item.box) || item.box.length !== 4) return;
+
+        const [x1, y1, x2, y2] = item.box.map(Number);
+        if (![x1, y1, x2, y2].every(Number.isFinite)) return;
+
+        const className = String(item.class || "object");
+        const isApple = className.toLowerCase().includes("apple");
+        const color = isApple ? "#2c9b61" : "#3568d4";
+        const confidence = (Number(item.confidence) * 100).toFixed(0);
+        const label = `${className}: ${confidence}%`;
+        const textWidth = ctx.measureText(label).width;
+        const labelHeight = fontSize + 12;
+        const labelY = Math.max(labelHeight, y1);
+
+        ctx.strokeStyle = color;
+        ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+        ctx.fillStyle = color;
+        ctx.fillRect(
+          x1,
+          labelY - labelHeight,
+          textWidth + 14,
+          labelHeight
+        );
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(label, x1 + 7, labelY - labelHeight / 2);
+      });
+
+      legend.style.display = detections.length ? "flex" : "none";
+    }
+
+    function renderResults(detections) {
+      resultsBox.replaceChildren();
+
+      if (detections.length === 0) {
+        resultsBox.innerHTML =
+          '<div class="results-placeholder">No fruit detected. Try a clearer photo or another image.</div>';
+        countBadge.style.display = "none";
+        return;
+      }
+
+      countBadge.textContent = `${detections.length} found`;
+      countBadge.style.display = "inline-block";
+
+      detections.forEach((item) => {
+        const className = String(item.class || "object");
+        const isApple = className.toLowerCase().includes("apple");
+        const confidence = Math.max(
+          0,
+          Math.min(100, Number(item.confidence) * 100)
+        );
+
+        const card = document.createElement("div");
+        card.className = "result";
+
+        const top = document.createElement("div");
+        top.className = "result-top";
+
+        const name = document.createElement("div");
+        name.className = "fruit-name";
+
+        const icon = document.createElement("span");
+        icon.className = "fruit-icon";
+        icon.textContent = isApple ? "🍎" : "🍌";
+
+        const label = document.createElement("span");
+        label.textContent = className;
+
+        const score = document.createElement("span");
+        score.className = "confidence";
+        score.textContent = `${confidence.toFixed(1)}%`;
+
+        name.append(icon, label);
+        top.append(name, score);
+
+        const meter = document.createElement("div");
+        meter.className = "meter";
+
+        const fill = document.createElement("div");
+        fill.className = "meter-fill";
+        fill.style.width = `${confidence}%`;
+        fill.style.background = isApple
+          ? "var(--apple)"
+          : "var(--banana)";
+
+        meter.appendChild(fill);
+        card.append(top, meter);
+        resultsBox.appendChild(card);
+      });
+    }
+
+    imageInput.addEventListener("change", () => {
+      selectedFile = imageInput.files[0] || null;
+      resetResults();
+
+      if (!selectedFile) {
+        canvas.style.display = "none";
+        emptyState.style.display = "block";
+        fileName.textContent = "No image selected yet";
+        detectButton.disabled = true;
+        setStatus("Choose an image to get started.");
+        return;
+      }
+
+      if (!selectedFile.type.startsWith("image/")) {
+        selectedFile = null;
+        canvas.style.display = "none";
+        emptyState.style.display = "block";
+        fileName.textContent = "No image selected yet";
+        detectButton.disabled = true;
+        setStatus("Please choose a valid image file.", "error");
+        return;
+      }
+
+      if (imageURL) URL.revokeObjectURL(imageURL);
+      imageURL = URL.createObjectURL(selectedFile);
+      sourceImage = new Image();
+
+      sourceImage.onload = () => {
+        drawOriginalImage();
+        setStatus("Image ready. Select Detect fruit to run the model.");
+      };
+
+      sourceImage.onerror = () => {
+        setStatus("Could not preview this image. Please choose another.", "error");
+      };
+
+      sourceImage.src = imageURL;
+      fileName.textContent = selectedFile.name;
+      detectButton.disabled = false;
+    });
+
+    detectButton.addEventListener("click", async () => {
+      if (!selectedFile) return;
+
+      detectButton.disabled = true;
+      setStatus("Running detection… please wait.", "loading");
+      resetResults();
+
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "API request failed.");
+        }
+
+        const detections = data.detections || [];
+        drawDetections(detections);
+        renderResults(detections);
+
+        if (detections.length) {
+          setStatus(
+            `Detection complete. ${detections.length} object(s) found.`,
+            "success"
+          );
+        } else {
+          setStatus("Detection finished, but no fruit was found.");
+        }
+      } catch (error) {
+        setStatus(
+          "Could not connect to the API. Make sure FastAPI is running at http://127.0.0.1:8000. " +
+          error.message,
+          "error"
+        );
+      } finally {
+        detectButton.disabled = !selectedFile;
+      }
+    });
+
+    resetButton.addEventListener("click", () => {
+      imageInput.value = "";
+      selectedFile = null;
+
+      if (imageURL) {
+        URL.revokeObjectURL(imageURL);
+        imageURL = null;
+      }
+
+      sourceImage = new Image();
+      canvas.style.display = "none";
+      emptyState.style.display = "block";
+      fileName.textContent = "No image selected yet";
+      detectButton.disabled = true;
+
+      resetResults();
+      setStatus("Choose an image to get started.");
+    });
+  </script>
+</body>
+</html>

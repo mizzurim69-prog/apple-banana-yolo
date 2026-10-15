@@ -1,0 +1,6 @@
+
+path: /Users/ryanwin/Desktop/apple-banana-yolo/label_studio_yolo_dataset
+train: train/images
+val: val/images
+nc: 2
+names: ['apples', 'banana']
